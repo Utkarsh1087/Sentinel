@@ -1,7 +1,16 @@
 const Redis = require('ioredis');
 
-const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
-const redisOptions = redisUrl.includes('localhost') ? {} : { tls: { rejectUnauthorized: false } };
+let redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+
+// Force TLS for cloud environments (Upstash/Render)
+const redisOptions = {};
+if (!redisUrl.includes('localhost')) {
+  redisOptions.tls = { rejectUnauthorized: false };
+  // Force secure protocol if provided as redis://
+  if (redisUrl.startsWith('redis://')) {
+    redisUrl = redisUrl.replace('redis://', 'rediss://');
+  }
+}
 
 const redis = new Redis(redisUrl, redisOptions);
 
