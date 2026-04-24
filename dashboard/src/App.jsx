@@ -622,6 +622,7 @@ const App = () => {
                             msg={log.message} 
                             color={log.level === 'ERROR' || log.level === 'CRITICAL' ? 'text-[#FF6044]' : log.level === 'WARN' ? 'text-amber-400' : 'text-white/70'}
                             hasAI={log.level === 'ERROR' || log.level === 'CRITICAL'}
+                            apiKey={activeProject.api_key}
                           />
                         ))
                       )}
@@ -713,14 +714,15 @@ const EndpointRow = ({ path, latency }) => (
   </tr>
 );
 
-const LogLine = ({ time, level, msg, color = 'text-white/60', hasAI = false }) => {
+const LogLine = ({ time, level, msg, color = 'text-white/60', hasAI = false, apiKey }) => {
   const [analyzing, setAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState(null);
 
   const handleAIExplain = async () => {
     setAnalyzing(true);
     try {
-      const { data } = await axios.post('/api/ai/explain-error', { errorLog: msg });
+      // Pass the API Key to authorize the AI diagnostic request
+      const { data } = await axios.post(`/api/ai/explain-error?apiKey=${apiKey}`, { errorLog: msg });
       setAnalysis(data.analysis);
     } catch (err) {
       setAnalysis("Diagnostic protocol failed. Manual system audit required.");
