@@ -46,7 +46,26 @@ class Sentinel {
   }
 
   queueLog(level, message) {
-    this.queueMetric('log', { level, message });
+    this.queueMetric('log', { level: level.toUpperCase(), message });
+  }
+
+  log(message, level = 'INFO') {
+    this.queueLog(level, message);
+  }
+
+  startTimer(label) {
+    const start = process.hrtime();
+    return {
+      stop: () => {
+        const diff = process.hrtime(start);
+        const durationMs = (diff[0] * 1e3 + diff[1] * 1e-6).toFixed(2);
+        this.queueMetric('custom_timer', {
+          label,
+          duration: parseFloat(durationMs)
+        });
+        return durationMs;
+      }
+    };
   }
 
   async trackQuery(queryFn, queryData = {}) {

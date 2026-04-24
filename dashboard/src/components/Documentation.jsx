@@ -105,6 +105,26 @@ const Documentation = ({ onBack, section }) => {
               ))}
             </div>
           </div>
+          <div>
+            <h3 className="text-[11px] font-black text-white/20 uppercase tracking-[0.4em] mb-6">System Logic</h3>
+            <div className="space-y-4">
+              {[
+                { label: 'Metrics', id: 'metrics' },
+                { label: 'Database', id: 'database' },
+                { label: 'Alerting', id: 'alerts' }
+              ].map(item => (
+                <button 
+                  key={item.id} 
+                  onClick={() => {
+                    document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }}
+                  className="block text-left w-full text-[14px] text-white/60 hover:text-[#FF6044] transition-colors bg-transparent border-none cursor-pointer"
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </aside>
 
         {/* Right: Main Content */}
