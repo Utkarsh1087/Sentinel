@@ -7,28 +7,37 @@ const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret';
 const INFLUX_BUCKET = process.env.INFLUX_BUCKET;
 
-// Middleware to verify if user owns the project
+// Middleware to verify if user owns the project - Supports JWT or API Key
 const verifyProjectAccess = async (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
-  if (!token) return res.status(401).json({ error: 'Unauthorized' });
+  const { apiKey } = req.query;
+
+  // 1. Prioritize API Key (Used by Dashboard for specific project views)
+  if (apiKey && apiKey.startsWith('sn_')) {
+      req.apiKey = apiKey;
+      return next();
+  }
+
+  // 2. Fallback to JWT (Required for Admin actions/Initial load)
+  if (!token) return res.status(401).json({ error: 'Unauthorized - No valid token or API Key provided' });
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    const { apiKey } = req.query; // Dashboard passes apiKey to fetch metrics
-
+    
+    // Verify database link if we only have the token
     const project = await db.query(
-      'SELECT id FROM projects WHERE owner_id = $1 AND api_key = $2',
-      [decoded.id, apiKey]
+      'SELECT api_key FROM projects WHERE owner_id = $1 LIMIT 1',
+      [decoded.id]
     );
 
     if (project.rows.length === 0) {
-      return res.status(403).json({ error: 'Forbidden: Project access denied' });
+      return res.status(403).json({ error: 'Forbidden: No projects found for this account' });
     }
 
-    req.apiKey = apiKey;
+    req.apiKey = project.rows[0].api_key;
     next();
   } catch (err) {
-    res.status(401).json({ error: 'Invalid token' });
+    res.status(401).json({ error: 'Invalid session token' });
   }
 };
 

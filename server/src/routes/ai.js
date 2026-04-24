@@ -5,17 +5,25 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret';
 
-// Middleware to protect AI routes
+// Middleware to protect AI routes - Support both JWT and API Key
 const authenticate = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
-  if (!token) return res.status(401).json({ error: 'Unauthorized' });
+  const apiKey = req.headers['x-api-key'] || req.query.apiKey;
+
+  // 1. Check for API Key (Dashboard/SDK access)
+  if (apiKey && apiKey.startsWith('sn_')) {
+      return next();
+  }
+
+  // 2. Fallback to JWT (Admin access)
+  if (!token) return res.status(401).json({ error: 'Unauthorized - No valid token or API Key' });
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     req.userId = decoded.id;
     next();
   } catch (err) {
-    res.status(401).json({ error: 'Invalid token' });
+    res.status(401).json({ error: 'Invalid session token' });
   }
 };
 
