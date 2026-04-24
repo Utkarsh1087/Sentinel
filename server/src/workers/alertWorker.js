@@ -16,7 +16,7 @@ const checkAlertRules = async () => {
       SELECT a.*, p.name as project_name, p.api_key 
       FROM alert_rules a 
       JOIN projects p ON a.project_id = p.id 
-      WHERE a.is_active = true
+      WHERE a.project_id IS NOT NULL
     `);
     
     const rules = result.rows;
