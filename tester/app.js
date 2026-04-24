@@ -39,6 +39,18 @@ app.get('/db-test', async (req, res) => {
   res.json(result);
 });
 
+setInterval(() => {
+  console.log('Pulse: System healthy...');
+  
+  // Simulate an API call tracking for the Bottlenecks table
+  sentinel.recordApiMetric({ 
+    path: '/api/v1/user-sync', 
+    method: 'GET', 
+    statusCode: 200, 
+    duration: Math.random() * 500 // Random latency between 0-500ms
+  });
+}, 10000);
+
 app.listen(3000, () => {
   console.log('🏁 Tester app running on http://localhost:3000');
   console.log('Try visiting /slow or /error to generate metrics.');

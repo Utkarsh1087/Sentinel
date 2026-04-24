@@ -92,15 +92,22 @@ router.get('/slow-endpoints', verifyProjectAccess, async (req, res) => {
 
   try {
     const rows = await queryMetrics(fluxQuery);
+    
+    // Gracefully handle empty datasets
+    if (!rows || rows.length === 0) {
+      return res.json([]);
+    }
+
     const formatted = rows.map(r => ({
       path: r.path || 'unknown',
-      avgLatency: Math.round(r._value),
-      calls: 'N/A' // Calls volume requires a different flux query (count)
+      avgLatency: Math.round(r._value || 0),
+      calls: 'N/A'
     }));
     res.json(formatted);
   } catch (err) {
     console.error('❌ InfluxDB Error (Slow Endpoints):', err.message || err);
-    res.status(500).json({ error: 'Failed to fetch endpoint analytics' });
+    // Return empty array on query failure to keep UI stable
+    res.json([]);
   }
 });
 
