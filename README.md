@@ -9,7 +9,7 @@
     <img src="https://img.shields.io/badge/Aesthetics-Premium-ff69b4.svg" alt="Aesthetics" />
   </p>
 
-  <p>Sentinel is not just a dashboard—it's a high-resolution window into your application's architecture. Built for developers who demand sub-second telemetry and AI-driven forensic analysis.</p>
+  <p>Sentinel is not just a dashboard. It's a high-resolution window into your application's architecture. Built for developers who demand sub-second telemetry and AI-driven forensic analysis.</p>
 
   <a href="https://github.com/Utkarsh1087/Sentinel/stargazers">⭐ Star us on GitHub</a>
 </div>
