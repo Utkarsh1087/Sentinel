@@ -552,7 +552,7 @@ const Landing = ({ user, onGetStarted, onNavigate, onLogin }) => {
                 </button>
 
                 <div className="space-y-6 text-[14px] font-medium text-[#FFFFFF]/80">
-                  <p>hello@sentinel.dev</p>
+                  <p>Observability for the modern web.</p>
                   <p>Built by developers, for developers.</p>
                 </div>
               </div>
