@@ -126,12 +126,38 @@ class Sentinel {
 
   startBackgroundMetrics() {
     if (this.intervalId) return;
+
+    let lastCpus = os.cpus();
+
     this.intervalId = setInterval(() => {
-      const cpuUsage = os.loadavg()[0];
+      // Calculate CPU Usage Percentage (Cross-platform delta method)
+      const currentCpus = os.cpus();
+      let idleDifference = 0;
+      let totalDifference = 0;
+
+      for (let i = 0; i < currentCpus.length; i++) {
+        const last = lastCpus[i].times;
+        const cur = currentCpus[i].times;
+
+        const idle = cur.idle - last.idle;
+        const total = (cur.user - last.user) + (cur.nice - last.nice) + 
+                      (cur.sys - last.sys) + (cur.irq - last.irq) + idle;
+        
+        idleDifference += idle;
+        totalDifference += total;
+      }
+
+      const cpuUsage = totalDifference === 0 ? 0 : (1 - idleDifference / totalDifference) * 100;
+      lastCpus = currentCpus;
+
       const totalMem = os.totalmem();
       const freeMem = os.freemem();
       const ramUsage = ((totalMem - freeMem) / totalMem) * 100;
-      this.queueMetric('system_metrics', { cpuUsage, ramUsage });
+
+      this.queueMetric('system_metrics', { 
+        cpuUsage: parseFloat(cpuUsage.toFixed(2)), 
+        ramUsage 
+      });
       this.flush();
     }, 10000);
   }

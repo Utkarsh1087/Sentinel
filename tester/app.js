@@ -8,7 +8,7 @@ sentinel.init({
   projectKey: 'sn_80cf2926ea2eca0d2bf15b29c3359fe1',
   ingestServer: 'https://sentinel-9x1b.onrender.com'
 });
-
+   
 // Use Sentinel Middleware
 app.use(sentinel.middleware());
 
