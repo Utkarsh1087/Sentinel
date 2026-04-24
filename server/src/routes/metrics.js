@@ -75,7 +75,7 @@ router.get('/system', verifyProjectAccess, async (req, res) => {
   }
 });
 
-// GET Slowest Endpoints
+// --- 1. SLOW ENDPOINTS (Bottlenecks) ---
 router.get('/slow-endpoints', verifyProjectAccess, async (req, res) => {
   const fluxQuery = `
     from(bucket: "${INFLUX_BUCKET}")
@@ -85,16 +85,12 @@ router.get('/slow-endpoints', verifyProjectAccess, async (req, res) => {
       |> filter(fn: (r) => r["_field"] == "duration")
       |> group(columns: ["path"])
       |> mean()
-      |> yield(name: "mean")
+      |> group()
   `;
 
   try {
     const rows = await queryMetrics(fluxQuery);
-    
-    // Gracefully handle empty datasets
-    if (!rows || rows.length === 0) {
-      return res.json([]);
-    }
+    if (!rows || rows.length === 0) return res.json([]);
 
     const formatted = rows.map(r => ({
       path: r.path || 'unknown',
@@ -103,13 +99,33 @@ router.get('/slow-endpoints', verifyProjectAccess, async (req, res) => {
     }));
     res.json(formatted);
   } catch (err) {
-    console.error('❌ InfluxDB Error (Slow Endpoints):', err.message || err);
-    // Return empty array on query failure to keep UI stable
     res.json([]);
   }
 });
 
-// GET Database Performance
+// --- 2. ENDPOINT OVERVIEW ---
+router.get('/overview', verifyProjectAccess, async (req, res) => {
+  const fluxQuery = `
+    from(bucket: "${INFLUX_BUCKET}")
+      |> range(start: -24h)
+      |> filter(fn: (r) => r["_measurement"] == "api_performance")
+      |> filter(fn: (r) => r["project_key"] == "${req.apiKey}")
+      |> group(columns: ["path"])
+      |> count()
+      |> group()
+      |> count()
+  `;
+
+  try {
+    const rows = await queryMetrics(fluxQuery);
+    const count = rows[0]?._value || 0;
+    res.json({ endpoints: count });
+  } catch (err) {
+    res.json({ endpoints: 0 });
+  }
+});
+
+// --- 3. DATABASE PERFORMANCE ---
 router.get('/db-performance', verifyProjectAccess, async (req, res) => {
   const fluxQuery = `
     from(bucket: "${INFLUX_BUCKET}")
@@ -119,18 +135,20 @@ router.get('/db-performance', verifyProjectAccess, async (req, res) => {
       |> filter(fn: (r) => r["_field"] == "duration")
       |> group(columns: ["query"])
       |> mean()
-      |> yield(name: "mean")
+      |> group()
   `;
 
   try {
-    const data = await queryMetrics(fluxQuery);
-    const formatted = data.map(r => ({
-      query: r.query,
-      avgLatency: r._value,
+    const rows = await queryMetrics(fluxQuery);
+    if (!rows || rows.length === 0) return res.json([]);
+
+    const formatted = rows.map(r => ({
+      query: r.query || 'unnamed_query',
+      avgLatency: Math.round(r._value || 0)
     }));
     res.json(formatted);
   } catch (err) {
-    res.status(500).json({ error: 'Flux query failed' });
+    res.json([]);
   }
 });
 
