@@ -23,7 +23,7 @@ const checkAlertRules = async () => {
 
     for (const rule of rules) {
       // 2. Query InfluxDB for the metric over the last 5 minutes
-      const measurement = rule.metric_type === 'latency' ? 'api_performance' : 'system_metrics';
+      const measurement = rule.metric_type === 'latency' ? 'api_performance_v2' : 'system_metrics';
       const field = rule.metric_type === 'latency' ? 'duration' : rule.metric_type === 'cpu' ? 'cpuUsage' : 'ramUsage';
 
       const fluxQuery = `
