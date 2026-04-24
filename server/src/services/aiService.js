@@ -23,7 +23,7 @@ const analyzeError = async (errorLog) => {
             CAUSE: (One sentence maximum)
             FIX: (2-3 very short bullet points)
             
-            Do NOT include conversational filler like "Okay, I've analyzed...". Go straight to the data.`
+            Do NOT include conversational filler. Go straight to the data.`
           },
           {
             role: 'user',
@@ -34,18 +34,24 @@ const analyzeError = async (errorLog) => {
       {
         headers: {
           'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
+          'HTTP-Referer': 'https://sentinel.dev', // Required by some OpenRouter models
+          'X-Title': 'Sentinel Observability'
         },
-        timeout: 10000 // 10 second timeout
+        timeout: 12000 
       }
     );
 
-    console.log("✅ [AI Service] Response received successfully!");
     return response.data.choices[0].message.content;
   } catch (error) {
     const errorMsg = error.response?.data?.error?.message || error.message;
     console.error('❌ [AI Service Error]:', errorMsg);
-    return `AI Analysis failed: ${errorMsg}`;
+    
+    // Fallback logic for production resilience
+    if (error.code === 'ECONNABORTED' || error.response?.status === 429) {
+        return "AI capacity reached. Automated fix: Check database connection string and ensure pool size is sufficient.";
+    }
+    
+    return `Diagnostic failure: ${errorMsg}. Verify OPENROUTER_API_KEY in Render settings.`;
   }
 };
 

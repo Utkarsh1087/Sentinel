@@ -3,10 +3,10 @@ const { sentinel } = require('sentinel-sdk');
 
 const app = express();
 
-// Initialize Sentinel
+// Initialize Sentinel with Live Production Credentials
 sentinel.init({
-  projectKey: 'sn_1747b23a9f612450e0b9b0ce96ee3a9a',
-  ingestServer: 'http://localhost:5000'
+  projectKey: 'sn_80cf2926ea2eca0d2bf15b29c3359fe1',
+  ingestServer: 'https://sentinel-9x1b.onrender.com'
 });
 
 // Use Sentinel Middleware

@@ -1,6 +1,6 @@
 {
   "name": "sentinel.io",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "SDK for Sentinel observability platform",
   "main": "src/index.js",
   "scripts": {
