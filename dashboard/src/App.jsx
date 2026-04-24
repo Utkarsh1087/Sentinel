@@ -44,6 +44,11 @@ import {
   Area
 } from 'recharts';
 
+// --- CONFIGURATION PROTOCOL ---
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+axios.defaults.baseURL = API_BASE_URL;
+// ------------------------------
+
 // Removed static mock data
   const fetchSystemMetrics = async (apiKey, range) => {
     const token = localStorage.getItem('sentinel_token');
@@ -138,7 +143,7 @@ const App = () => {
     if (!activeProject) return;
 
     const token = localStorage.getItem('sentinel_token');
-    const socket = io({ auth: { token } }); // Uses the Vite proxy we set up
+    const socket = io(API_BASE_URL, { auth: { token } });
     
     socket.on('connect', () => {
       socket.emit('join-project', activeProject.id);
