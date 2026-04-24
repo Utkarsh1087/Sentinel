@@ -1,0 +1,143 @@
+const os = require('os');
+const axios = require('axios');
+
+class Sentinel {
+  constructor() {
+    this.projectKey = null;
+    this.ingestServer = 'http://127.0.0.1:5000';
+    this.metricsQueue = [];
+    this.intervalId = null;
+    this.originalLog = console.log;
+    this.originalError = console.error;
+  }
+
+  init(config) {
+    this.projectKey = config.projectKey;
+    if (config.ingestServer) {
+        this.ingestServer = config.ingestServer.replace('localhost', '127.0.0.1');
+    }
+
+    this.originalLog('✅ Sentinel SDK Initialized');
+    
+    this.setupLogInterception();
+    this.startBackgroundMetrics();
+  }
+
+  setupLogInterception() {
+    const self = this;
+    
+    console.log = function(...args) {
+      self.originalLog.apply(console, args);
+      self.queueLog('INFO', args.join(' '));
+    };
+
+    console.error = function(...args) {
+      self.originalError.apply(console, args);
+      self.queueLog('ERROR', args.join(' '));
+    };
+
+    process.on('uncaughtException', (err) => {
+      this.originalError(`💥 FATAL ERROR: ${err.message}`);
+      this.queueLog('CRITICAL', `Uncaught Exception: ${err.message}\n${err.stack}`);
+      this.flush().then(() => {
+        setTimeout(() => process.exit(1), 500);
+      });
+    });
+  }
+
+  queueLog(level, message) {
+    this.queueMetric('log', { level, message });
+  }
+
+  async trackQuery(queryFn, queryData = {}) {
+    const start = process.hrtime();
+    try {
+      const result = await queryFn();
+      const diff = process.hrtime(start);
+      const durationMs = (diff[0] * 1e3 + diff[1] * 1e-6).toFixed(2);
+      this.queueMetric('db_performance', {
+        query: queryData.query || 'unnamed_query',
+        duration: parseFloat(durationMs),
+        success: true
+      });
+      return result;
+    } catch (error) {
+      const diff = process.hrtime(start);
+      const durationMs = (diff[0] * 1e3 + diff[1] * 1e-6).toFixed(2);
+      this.queueMetric('db_performance', {
+        query: queryData.query || 'unnamed_query',
+        duration: parseFloat(durationMs),
+        success: false,
+        error: error.message
+      });
+      throw error;
+    }
+  }
+
+  middleware() {
+    return (req, res, next) => {
+      const start = process.hrtime();
+      
+      // Auto-capture 500 errors as logs
+      const originalEnd = res.end;
+      res.end = (chunk, encoding, callback) => {
+        if (res.statusCode >= 500) {
+          this.queueLog('ERROR', `Critical Failure on ${req.method} ${req.path}`);
+        }
+        return originalEnd.call(res, chunk, encoding, callback);
+      };
+
+      res.on('finish', () => {
+        const diff = process.hrtime(start);
+        const timeInMs = (diff[0] * 1e3 + diff[1] * 1e-6).toFixed(2);
+        this.recordApiMetric({
+          path: req.route ? req.route.path : req.path,
+          method: req.method,
+          statusCode: res.statusCode,
+          duration: parseFloat(timeInMs)
+        });
+      });
+      next();
+    };
+  }
+
+  recordApiMetric(data) {
+    this.queueMetric('api_performance', data);
+  }
+
+  startBackgroundMetrics() {
+    if (this.intervalId) return;
+    this.intervalId = setInterval(() => {
+      const cpuUsage = os.loadavg()[0];
+      const totalMem = os.totalmem();
+      const freeMem = os.freemem();
+      const ramUsage = ((totalMem - freeMem) / totalMem) * 100;
+      this.queueMetric('system_metrics', { cpuUsage, ramUsage });
+      this.flush();
+    }, 10000);
+  }
+
+  queueMetric(type, data) {
+    this.originalLog(`📦 [SENTINEL] Queued ${type}: ${JSON.stringify(data).substring(0, 50)}...`);
+    this.metricsQueue.push({ type, data, timestamp: Date.now() });
+  }
+
+  async flush() {
+    if (this.metricsQueue.length === 0 || !this.projectKey) return;
+    const payload = {
+      apiKey: this.projectKey,
+      metrics: [...this.metricsQueue],
+      timestamp: Date.now()
+    };
+    this.metricsQueue = [];
+    
+    try {
+      await axios.post(`${this.ingestServer}/v1/ingest`, payload);
+    } catch (error) {
+      // Silent error handler
+    }
+  }
+}
+
+const sentinel = new Sentinel();
+module.exports = { sentinel };

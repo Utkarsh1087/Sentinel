@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --vista-primary: 255, 107, 0;
+  --vista-orange: 255, 140, 0;
+  --vista-bg: 0, 0, 0;
+  --vista-text: 239, 255, 235;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@layer base {
+  body {
+    background-color: rgb(var(--vista-bg));
+    color: rgb(var(--vista-text));
+    @apply relative min-h-screen overflow-x-hidden;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    @apply rounded-3xl overflow-hidden shadow-2xl;
+  }
+  
+  .vista-glow {
+    position: relative;
+  }
+
+  .vista-glow::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -10;
+    background: rgba(var(--vista-orange), 0.15);
+    filter: blur(80px);
+    opacity: 0.5;
+    pointer-events: none;
+    border-radius: 9999px;
+  }
+
+  .metric-card {
+    @apply glass-panel p-9 relative transition-all duration-700;
+  }
+
+  .metric-card:hover {
+    border-color: rgba(var(--vista-primary), 0.3);
+  }
+
+  .metric-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
