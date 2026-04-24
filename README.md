@@ -1,6 +1,5 @@
 <div align="center">
   <img src="dashboard/src/assets/sentinellogo.png" alt="Sentinel Logo" width="200" />
-  <h1>🛡️ Sentinel</h1>
   <p><b>Precision Observability for Modern Engineering Teams.</b></p>
 
   <p>
