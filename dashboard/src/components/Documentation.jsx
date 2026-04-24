@@ -144,13 +144,13 @@ const Documentation = ({ onBack, section }) => {
             
             <div className="bg-black border border-white/10 rounded-xl p-8 relative group">
               <button 
-                onClick={() => copyToClipboard('npm install @sentinel/core', 'npm')}
+                onClick={() => copyToClipboard('npm install sentinel.io', 'npm')}
                 className="absolute top-6 right-6 p-2 bg-white/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
               >
                 {copied === 'npm' ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-white/50" />}
               </button>
               <code className="text-[#FF6044] text-[16px]">
-                <span className="text-white/40">$</span> npm install <span className="text-white">@sentinel/core</span>
+                <span className="text-white/40">$</span> npm install <span className="text-white">sentinel.io</span>
               </code>
             </div>
 
@@ -200,7 +200,7 @@ const Documentation = ({ onBack, section }) => {
                 </div>
                 <div className="p-8">
                   <pre className="text-[14px] leading-relaxed text-white/80 overflow-x-auto">
-                    {`import { SentinelProvider } from '@sentinel/core';
+                    {`import { SentinelProvider } from 'sentinel.io';
 
 function App() {
   return (
