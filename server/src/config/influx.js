@@ -24,22 +24,36 @@ const writeMetrics = (apiKey, metrics) => {
     return;
   }
 
-  metrics.forEach(m => {
-    const point = new Point(m.type)
-      .tag('project_key', apiKey);
+    metrics.forEach(m => {
+      const point = new Point(m.type)
+        .tag('project_key', apiKey);
 
-    // Dynamic field mapping
-    for (const [key, value] of Object.entries(m.data)) {
-      if (typeof value === 'number') {
-        point.floatField(key, value);
-      } else {
-        point.stringField(key, value);
+      // --- TAGGING PROTOCOL ---
+      // Elevate critical metadata to tags for grouping support
+      if (m.type === 'api_performance') {
+        if (m.data.path) point.tag('path', m.data.path);
+        if (m.data.method) point.tag('method', m.data.method);
       }
-    }
+      if (m.type === 'db_performance') {
+        if (m.data.query) point.tag('query', m.data.query);
+      }
+      // ------------------------
 
-    point.timestamp(new Date(m.timestamp));
-    writeApi.writePoint(point);
-  });
+      // Dynamic field mapping
+      for (const [key, value] of Object.entries(m.data)) {
+        // Skip keys already promoted to tags
+        if (['path', 'method', 'query'].includes(key)) continue;
+
+        if (typeof value === 'number') {
+          point.floatField(key, value);
+        } else {
+          point.stringField(key, value);
+        }
+      }
+
+      point.timestamp(new Date(m.timestamp));
+      writeApi.writePoint(point);
+    });
 
   // Simplified flush for this demo; in production use a more robust strategy
   writeApi.flush().catch(err => console.error('InfluxDB Flush Error:', err));
