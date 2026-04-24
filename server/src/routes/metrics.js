@@ -85,9 +85,7 @@ router.get('/slow-endpoints', verifyProjectAccess, async (req, res) => {
       |> filter(fn: (r) => r["_field"] == "duration")
       |> group(columns: ["path"])
       |> mean()
-      |> group()
-      |> sort(columns: ["_value"], desc: true)
-      |> limit(n: 5)
+      |> yield(name: "mean")
   `;
 
   try {
