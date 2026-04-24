@@ -80,7 +80,7 @@ router.get('/slow-endpoints', verifyProjectAccess, async (req, res) => {
   const fluxQuery = `
     from(bucket: "${INFLUX_BUCKET}")
       |> range(start: -24h)
-      |> filter(fn: (r) => r["_measurement"] == "api_performance")
+      |> filter(fn: (r) => r["_measurement"] == "api_performance_v2")
       |> filter(fn: (r) => r["project_key"] == "${req.apiKey}")
       |> filter(fn: (r) => r["_field"] == "duration")
       |> group(columns: ["path"])
@@ -108,7 +108,7 @@ router.get('/overview', verifyProjectAccess, async (req, res) => {
   const fluxQuery = `
     from(bucket: "${INFLUX_BUCKET}")
       |> range(start: -24h)
-      |> filter(fn: (r) => r["_measurement"] == "api_performance")
+      |> filter(fn: (r) => r["_measurement"] == "api_performance_v2")
       |> filter(fn: (r) => r["project_key"] == "${req.apiKey}")
       |> group(columns: ["path"])
       |> count()
@@ -130,7 +130,7 @@ router.get('/db-performance', verifyProjectAccess, async (req, res) => {
   const fluxQuery = `
     from(bucket: "${INFLUX_BUCKET}")
       |> range(start: -24h)
-      |> filter(fn: (r) => r["_measurement"] == "db_performance")
+      |> filter(fn: (r) => r["_measurement"] == "db_performance_v2")
       |> filter(fn: (r) => r["project_key"] == "${req.apiKey}")
       |> filter(fn: (r) => r["_field"] == "duration")
       |> group(columns: ["query"])

@@ -25,19 +25,20 @@ const writeMetrics = (apiKey, metrics) => {
   }
 
     metrics.forEach(m => {
-      const point = new Point(m.type)
-        .tag('project_key', apiKey);
-
-      // --- TAGGING PROTOCOL ---
-      // Elevate critical metadata to tags for grouping support
+      let point;
+      
       if (m.type === 'api_performance') {
+        point = new Point('api_performance_v2');
         if (m.data.path) point.tag('path', m.data.path);
         if (m.data.method) point.tag('method', m.data.method);
-      }
-      if (m.type === 'db_performance') {
+      } else if (m.type === 'db_performance') {
+        point = new Point('db_performance_v2');
         if (m.data.query) point.tag('query', m.data.query);
+      } else {
+        point = new Point(m.type);
       }
-      // ------------------------
+
+      point.tag('project_key', apiKey);
 
       // Dynamic field mapping
       for (const [key, value] of Object.entries(m.data)) {
