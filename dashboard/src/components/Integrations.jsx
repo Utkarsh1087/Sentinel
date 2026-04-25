@@ -17,18 +17,9 @@ const Integrations = ({ onBack, onNavigate }) => {
       title: 'Internal Stack',
       icon: <Server className="w-5 h-5 text-[#FF6044]" />,
       items: [
-        { name: 'InfluxDB', icon: <Database className="w-6 h-6" />, status: 'CORE DATABASE', desc: 'All your metrics are stored in InfluxDB. It is built for time-series data and lets Sentinel query millions of data points by time range in under 500ms.', hideAction: true },
-        { name: 'Redis', icon: <Zap className="w-6 h-6" />, status: 'CORE CACHE', desc: 'Redis powers the pub/sub channel for live logs and the BullMQ job queue that handles alert delivery without blocking the API.', hideAction: true },
-        { name: 'PostgreSQL', icon: <Database className="w-6 h-6" />, status: 'CORE DATABASE', desc: 'Users, projects, alert rules, error logs, and project keys are all stored in PostgreSQL, handling the relational side of Sentinel.', hideAction: true }
-      ]
-    },
-    {
-      title: 'Databases',
-      icon: <Database className="w-5 h-5 text-[#FF6044]" />,
-      items: [
-        { name: 'InfluxDB', icon: <Database className="w-6 h-6" />, status: 'CORE', desc: 'Where all your CPU, RAM, and response time readings live. Sentinel writes a new data point every 5 seconds per monitored app.', link: 'database' },
-        { name: 'PostgreSQL', icon: <Database className="w-6 h-6" />, status: 'NATIVE', desc: "Stores your account, projects, alert rules, error logs, and alert history. Everything you configure in the dashboard is saved here.", link: 'database' },
-        { name: 'Redis', icon: <Zap className="w-6 h-6" />, status: 'NATIVE', desc: 'Broadcasts live logs to your browser via WebSocket pub/sub, and queues alert delivery jobs via BullMQ.', link: 'database' }
+        { name: 'InfluxDB', icon: <Database className="w-6 h-6" />, status: 'CORE DATABASE', desc: 'All CPU, RAM, and response time readings are stored here. InfluxDB is built specifically for time-series data — querying 6 hours of metrics takes milliseconds even with millions of data points stored.', link: 'database' },
+        { name: 'Redis', icon: <Zap className="w-6 h-6" />, status: 'CORE CACHE', desc: 'Redis powers the pub/sub channel for live logs and the BullMQ job queue that handles alert delivery without blocking the API.', link: 'database' },
+        { name: 'PostgreSQL', icon: <Database className="w-6 h-6" />, status: 'CORE DATABASE', desc: 'Users, projects, alert rules, error logs, and project keys are all stored in PostgreSQL, handling the relational side of Sentinel.', link: 'database' }
       ]
     }
   ];
@@ -91,12 +82,12 @@ const Integrations = ({ onBack, onNavigate }) => {
                     </p>
                     
                     {!item.hideAction && (
-                      <button 
+                     <button 
                         onClick={() => item.link && onNavigate && onNavigate('documentation', item.link)}
                         className="mt-8 text-[11px] font-bold text-white/30 uppercase tracking-[0.2em] group-hover:text-white transition-colors flex items-center gap-2"
                       >
-                         {category.title === 'Databases' ? 'Learn More' : 'Configure Integration'}
-                         <Zap className="w-3 h-3 text-[#FF6044]" />
+                         {category.title === 'Communication' ? 'Configure Integration' : 'Learn More'}
+                         <span className="text-[#FF6044]">→</span>
                       </button>
                     )}
                   </div>

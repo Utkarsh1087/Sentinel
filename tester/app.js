@@ -1,12 +1,12 @@
 const express = require('express');
-const { sentinel } = require('sentinel-sdk');
+const { sentinel } = require('sentinel.io');
 
 const app = express();
 
 // Initialize Sentinel with Live Production Credentials
 sentinel.init({
   projectKey: 'sn_80cf2926ea2eca0d2bf15b29c3359fe1',
-  ingestServer: 'https://sentinel-9x1b.onrender.com'
+  serverUrl: 'https://sentinel-9x1b.onrender.com'
 });
    
 // Use Sentinel Middleware

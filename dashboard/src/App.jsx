@@ -396,19 +396,19 @@ const App = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   <StatCard 
                     title="Avg CPU" 
-                    value={`${(systemMetrics.reduce((acc, curr) => acc + (curr.cpuUsage || 0), 0) / (systemMetrics.length || 1)).toFixed(1)}%`} 
+                    value={`${(systemMetrics.reduce((acc, curr) => acc + (curr.cpuPercent || 0), 0) / (systemMetrics.length || 1)).toFixed(1)}%`} 
                     icon={Cpu} 
                     trend="+2.4%" 
                     color="text-primary" 
-                    data={systemMetrics.map(m => m.cpuUsage)}
+                    data={systemMetrics.map(m => m.cpuPercent)}
                   />
                   <StatCard 
                     title="Avg RAM" 
-                    value={`${(systemMetrics.reduce((acc, curr) => acc + (curr.ramUsage || 0), 0) / (systemMetrics.length || 1)).toFixed(1)}%`} 
+                    value={`${(systemMetrics.reduce((acc, curr) => acc + (curr.ramPercent || 0), 0) / (systemMetrics.length || 1)).toFixed(1)}%`} 
                     icon={Database} 
                     trend="-1.2%" 
                     color="text-primary" 
-                    data={systemMetrics.map(m => m.ramUsage)}
+                    data={systemMetrics.map(m => m.ramPercent)}
                   />
                   <StatCard 
                     title="Endpoints" 
@@ -490,7 +490,7 @@ const App = () => {
                           />
                           <Area 
                             type="monotone" 
-                            dataKey="cpuUsage" 
+                            dataKey="cpuPercent" 
                             stroke="#FF6044" 
                             strokeWidth={3}
                             fillOpacity={1} 
@@ -499,7 +499,7 @@ const App = () => {
                           />
                           <Area 
                             type="monotone" 
-                            dataKey="ramUsage" 
+                            dataKey="ramPercent" 
                             stroke="#FDBA74" 
                             strokeWidth={3}
                             fillOpacity={1} 

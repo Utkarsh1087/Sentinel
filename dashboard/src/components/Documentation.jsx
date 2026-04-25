@@ -27,19 +27,19 @@ const Documentation = ({ onBack, section }) => {
       id: 'quickstart',
       title: 'Quickstart',
       icon: <Zap className="w-5 h-5 text-[#FF6044]" />,
-      content: 'Initialize the Sentinel SDK in your project with just three lines of code. Get real-time observability in seconds.'
+      content: 'Install sentinel.io, add your project key, and start seeing CPU, RAM, and request data in your dashboard immediately.'
     },
     {
       id: 'metrics',
       title: 'Metrics Tracking',
       icon: <Activity className="w-5 h-5 text-[#FF6044]" />,
-      content: 'Monitor CPU, RAM, and Database latency using our high-frequency polling engine.'
+      content: 'CPU usage, RAM consumption, and API response times — collected every 5 seconds automatically by the SDK.'
     },
     {
       id: 'security',
       title: 'Security',
       icon: <Shield className="w-5 h-5 text-[#FF6044]" />,
-      content: 'Sentinel uses zero-trust architecture to ensure your telemetry data is encrypted and isolated.'
+      content: "Your project key is stored as a bcrypt hash. All data travels over HTTPS. Each project's data is isolated by key."
     }
   ];
 
@@ -89,8 +89,6 @@ const Documentation = ({ onBack, section }) => {
             <div className="space-y-4">
               {[
                 { label: 'Node.js SDK', id: 'node-sdk' },
-                { label: 'React Hooks', id: 'react-hooks' },
-                { label: 'Go Client', id: 'go-client' },
                 { label: 'REST API', id: 'rest-api' }
               ].map(item => (
                 <button 
@@ -130,9 +128,9 @@ const Documentation = ({ onBack, section }) => {
         {/* Right: Main Content */}
         <main className="space-y-24">
           <section id="introduction">
-            <h1 className="text-[48px] font-black tracking-tighter mb-8 leading-none">The Vanguard of <br /><span className="text-[#FF6044]">Developer Observability.</span></h1>
+            <h1 className="text-[48px] font-black tracking-tighter mb-8 leading-none">Sentinel <br /><span className="text-[#FF6044]">Documentation</span></h1>
             <p className="text-[18px] text-white/60 leading-relaxed max-w-3xl mb-12">
-              Sentinel is more than a monitoring tool. It is a logic-driven ecosystem that tracks your application's health, analyzes performance bottlenecks with AI, and secures your infrastructure with real-time alerts.
+              Everything you need to install, configure, and use Sentinel in your Node.js app. Start with the Quickstart and have your first dashboard running in under 5 minutes.
             </p>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -152,7 +150,11 @@ const Documentation = ({ onBack, section }) => {
               <h2 className="text-[28px] font-black tracking-tight uppercase">Architecture</h2>
             </div>
             <p className="text-[15px] text-white/40 leading-relaxed max-w-3xl">
-              Sentinel's internal logic is split into three distinct layers: Ingestion, Analysis, and Delivery. Data flows from your Node.js application via the SDK to our regional collectors, where it is analyzed in real-time before being stored in our time-series cluster.
+              Sentinel has three layers. The SDK runs inside your app and collects data. The server receives that data and writes it to InfluxDB. The dashboard reads from InfluxDB and displays it in real time.
+              <br /><br />
+              <code className="text-[#FF6044] bg-white/5 p-4 rounded-lg block text-[13px]">
+                SDK (your app) → POST /v1/ingest every 5s → InfluxDB (storage) → Dashboard (display)
+              </code>
             </p>
           </section>
 
@@ -178,7 +180,7 @@ const Documentation = ({ onBack, section }) => {
               <div className="flex gap-4">
                 <Info className="w-5 h-5 text-[#FF6044] shrink-0" />
                 <p className="text-[14px] text-white/60 leading-relaxed">
-                  Before initializing, ensure you have your <span className="text-white font-bold underline decoration-[#FF6044]/40">Organization API Key</span> ready from the Sentinel Dashboard Settings.
+                  Before initializing, get your <span className="text-white font-bold underline decoration-[#FF6044]/40">Project Key</span> from the Sentinel dashboard. Go to your project → Settings → copy the Project Key.
                 </p>
               </div>
             </div>
@@ -190,7 +192,7 @@ const Documentation = ({ onBack, section }) => {
               <h2 className="text-[28px] font-black tracking-tight uppercase">Authentication</h2>
             </div>
             <p className="text-[15px] text-white/40 leading-relaxed max-w-3xl">
-              All requests to the Sentinel API must be authenticated using an API Key. This key should be passed in the `x-api-key` header for REST requests, or provided during the SDK initialization phase.
+              The SDK authenticates using your Project Key. Pass it once during init — the SDK attaches it automatically to every ingest request as the x-project-key header. Never expose your project key in frontend code or public repos.
             </p>
           </section>
 
@@ -200,18 +202,16 @@ const Documentation = ({ onBack, section }) => {
               <h2 className="text-[28px] font-black tracking-tight uppercase">Node.js SDK</h2>
             </div>
             <p className="text-[15px] text-white/40 leading-relaxed">
-              The Node.js SDK is our most mature client. It automatically hooks into the global error handler and the `http` module to track performance without manual instrumentation.
+              The Node.js SDK is the main way to use Sentinel. It hooks into your Express app automatically — you don't need to add anything to individual routes. CPU, RAM, response times, and errors are all collected without any manual instrumentation.
             </p>
-          </section>
-
-          <section id="react-hooks">
+               <section id="implementation">
              <h3 className="text-[20px] font-bold mb-8 flex items-center gap-3">
                <div className="w-2 h-2 bg-[#FF6044] rounded-full" />
                Implementation Example
              </h3>
              <div className="bg-[#0A0A0B] border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
                 <div className="bg-white/5 px-6 py-3 flex items-center justify-between">
-                   <span className="text-[11px] text-white/30 uppercase font-bold tracking-widest">App.jsx</span>
+                   <span className="text-[11px] text-white/30 uppercase font-bold tracking-widest">SERVER.JS</span>
                    <div className="flex gap-1.5">
                       <div className="w-2.5 h-2.5 rounded-full bg-white/10" />
                       <div className="w-2.5 h-2.5 rounded-full bg-white/10" />
@@ -220,27 +220,49 @@ const Documentation = ({ onBack, section }) => {
                 </div>
                 <div className="p-8">
                   <pre className="text-[14px] leading-relaxed text-white/80 overflow-x-auto">
-                    {`import { SentinelProvider } from 'sentinel.io';
+                    {`// server.js — your existing Express app
+import express from 'express';
+import { sentinel } from 'sentinel.io';
 
-function App() {
-  return (
-    <SentinelProvider apiKey="your-key-here">
-      <Dashboard />
-    </SentinelProvider>
-  );
-}`}
+const app = express();
+
+// Initialize Sentinel — 3 lines, that's it
+sentinel.init({
+  projectKey: 'your-project-key-here',
+  serverUrl: 'https://your-sentinel-server.com'
+});
+
+// Attach to Express — auto-tracks all routes
+app.use(sentinel.middleware());
+
+app.get('/api/users', (req, res) => {
+  res.json({ users: [] });
+});
+
+app.listen(3001);`}
                   </pre>
                 </div>
              </div>
-          </section>
-          <section id="go-client">
+          </section>         </section>
+          <section id="commonjs">
             <div className="flex items-center gap-4 mb-8">
               <Terminal className="text-[#FF6044] w-6 h-6" />
-              <h2 className="text-[28px] font-black tracking-tight uppercase">Go Client</h2>
+              <h2 className="text-[28px] font-black tracking-tight uppercase">USING WITH COMMONJS</h2>
             </div>
-            <p className="text-[15px] text-white/40 leading-relaxed max-w-3xl">
-              Available as a beta release. The Go client provides high-performance telemetry ingestion for highly concurrent systems using lightweight goroutines.
+            <p className="text-[15px] text-white/40 leading-relaxed max-w-3xl mb-8">
+              If your project uses require() instead of import, the SDK supports CommonJS too.
             </p>
+            <div className="bg-[#0A0A0B] border border-white/5 rounded-2xl p-8 mb-8">
+              <pre className="text-[14px] text-white/80">
+{`// server.js — CommonJS version
+const { sentinel } = require('sentinel.io');
+
+sentinel.init({
+  projectKey: 'your-project-key-here',
+  serverUrl: 'https://your-sentinel-server.com'
+});`}
+              </pre>
+            </div>
           </section>
 
           <section id="rest-api">
@@ -248,9 +270,27 @@ function App() {
               <Zap className="text-[#FF6044] w-6 h-6" />
               <h2 className="text-[28px] font-black tracking-tight uppercase">REST API</h2>
             </div>
-            <p className="text-[15px] text-white/40 leading-relaxed max-w-3xl">
-              For custom implementations, you can push metrics directly to our ingestion endpoint via POST requests. Refer to the Alerts documentation for the precise JSON schema.
+            <p className="text-[15px] text-white/40 leading-relaxed max-w-3xl mb-8">
+              If you want to send metrics from a non-Node.js app, or build a custom integration, you can POST directly to the ingest endpoint.
             </p>
+            <div className="bg-black border border-white/10 rounded-xl p-8">
+              <pre className="text-[13px] text-white/70">
+{`POST /v1/ingest
+Headers: x-project-key: your-key-here
+Content-Type: application/json
+
+{
+  "events": [
+    {
+      "type": "metric",
+      "cpuPercent": 34.2,
+      "ramPercent": 61.8,
+      "timestamp": 1718000000000
+    }
+  ]
+}`}
+              </pre>
+            </div>
           </section>
 
           <section id="metrics">
@@ -259,7 +299,7 @@ function App() {
               <h2 className="text-[28px] font-black tracking-tight uppercase">High-Frequency Metrics</h2>
             </div>
             <p className="text-[15px] text-white/40 leading-relaxed mb-8">
-              Sentinel polls system resources via the Node.js `os` and `process` modules every 5 seconds. This includes CPU user/system time, RSS memory, and event loop lag. These heartbeat metrics arrive in InfluxDB as time-series points, providing a high-resolution window into your app's health.
+              Every 5 seconds the SDK reads your server's CPU percentage and RAM usage using Node's built-in os module. These are sent to the server and written to InfluxDB as time-series data points. The dashboard charts are built from these points, so each data point on the graph represents a 5-second snapshot.
             </p>
           </section>
 
@@ -269,7 +309,10 @@ function App() {
               <h2 className="text-[28px] font-black tracking-tight uppercase">Time-Series (InfluxDB)</h2>
             </div>
             <p className="text-[15px] text-white/40 leading-relaxed">
-              We use InfluxDB for its superior handling of high-cardinality time-series data. Each project's metrics are isolated by project keys. Retention policies are enforced at the bucket level, ensuring that stale data is purged based on your tier (24h or 30 days).
+              InfluxDB stores all metrics because it's built specifically for time-series data. A regular database like PostgreSQL would slow down badly with millions of metric rows. InfluxDB handles this natively and lets us query "show me the last 6 hours of CPU" in milliseconds.
+              <br /><br />
+              <span className="text-white/60 font-bold">Free tier:</span> data kept for 24 hours then deleted.<br />
+              <span className="text-white/60 font-bold">Pro tier:</span> data kept for 30 days.
             </p>
           </section>
 
@@ -278,8 +321,18 @@ function App() {
               <Zap className="text-[#FF6044] w-6 h-6" />
               <h2 className="text-[28px] font-black tracking-tight uppercase">Alerting & Webhooks</h2>
             </div>
-            <p className="text-[15px] text-white/40 leading-relaxed">
-              Alerts are triggered when our anomaly engine detects a deviation. Integration with Discord and Slack is achieved via standard webhooks. You simply provide the webhook URL in your project settings, and Sentinel will dispatch JSON payloads containing the metric name, violation value, and its architectural context.
+            <p className="text-[15px] text-white/40 leading-relaxed space-y-4">
+              Alerts fire when Sentinel detects an anomaly — like RAM crossing 80% or an endpoint suddenly running 40% slower than its daily average.
+              <br /><br />
+              To set up Discord or Slack alerts:
+              <br />
+              1. Create a webhook URL in your Discord server or Slack workspace settings
+              <br />
+              2. Paste it into your project's alert settings in the Sentinel dashboard
+              <br />
+              3. Choose which metrics to watch and the threshold
+              <br /><br />
+              Sentinel sends a POST request to that URL with the metric name, current value, and normal range.
             </p>
           </section>
         </main>
@@ -288,7 +341,7 @@ function App() {
       {/* 🏁 Footer */}
       <footer className="border-t border-white/5 py-12 px-10 text-center">
         <p className="text-[11px] text-white/20 uppercase tracking-[0.5em]">
-          Engineered for reliability. Sentinel © 2026
+          DOCUMENTATION V1.0 — SENTINEL © 2026
         </p>
       </footer>
     </div>

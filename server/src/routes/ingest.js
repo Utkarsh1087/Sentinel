@@ -9,17 +9,19 @@ module.exports = (io) => {
   // This route receives data from the SDK
   router.post('/', async (req, res) => {
     try {
-      const { apiKey, metrics, timestamp } = req.body;
-      console.log(`📡 Ingest request from: ${apiKey}`);
+      // 1. Extract API Key (support header and body for backward compatibility)
+      const apiKey = req.headers['x-project-key'] || req.body.apiKey;
+      
+      // 2. Extract Metrics (support 'events' and 'metrics' naming)
+      let metricsData = req.body.events || req.body.metrics || [];
 
       if (!apiKey) {
-        return res.status(400).json({ error: 'API Key is required' });
+        return res.status(400).json({ error: 'Project Key is required' });
       }
 
-      // 1. Try Cache First (Redis)
+      // 3. Resolve Project ID (Cache-first)
       let projectId = await redis.get(`project_key:${apiKey}`);
 
-      // 2. If not in cache, check Postgres
       if (!projectId) {
         const projectResult = await db.query(
           'SELECT id FROM projects WHERE api_key = $1',
@@ -28,29 +30,33 @@ module.exports = (io) => {
 
         if (projectResult.rows.length === 0) {
           console.warn(`[INGEST] Unauthorized attempt with key: ${apiKey}`);
-          return res.status(401).json({ error: 'Invalid API Key' });
+          return res.status(401).json({ error: 'Invalid Project Key' });
         }
 
         projectId = projectResult.rows[0].id;
-
-        // 3. Store in Redis for 1 hour to optimize future hits
         await redis.set(`project_key:${apiKey}`, projectId, 'EX', 3600);
-        console.log(`[INGEST] Map: Key ${apiKey.substring(0, 10)}... -> Project ID ${projectId}`);
       }
       
-      // Separate logs from metrics for reporting
-      const logs = metrics.filter(m => m.type === 'log');
-      const otherMetrics = metrics.filter(m => m.type !== 'log');
+      // 4. Normalize and Separate Metrics
+      // New SDK sends data at top level (excluding type/timestamp). 
+      // We wrap it in .data for influx.js compatibility.
+      const normalizedMetrics = metricsData.map(m => {
+        const { type, timestamp, ...rest } = m;
+        // If it already has .data (old SDK), keep it, otherwise use rest
+        const data = m.data ? m.data : rest;
+        return { type, data, timestamp: timestamp || Date.now() };
+      });
 
-      // Write standard metrics to InfluxDB
+      const logs = normalizedMetrics.filter(m => m.type === 'log');
+      const otherMetrics = normalizedMetrics.filter(m => m.type !== 'log');
+
+      // 5. Storage & Broadcast
       if (otherMetrics.length > 0) {
         writeMetrics(apiKey, otherMetrics);
       }
 
-      // Broadcast logs to the dashboard in real-time
       if (logs.length > 0) {
         logs.forEach(log => {
-          console.log(`[INGEST] Broadcasting log to room: project_${projectId}`);
           io.to(`project_${projectId}`).emit('new-log', {
             ...log.data,
             timestamp: log.timestamp
@@ -58,8 +64,6 @@ module.exports = (io) => {
         });
       }
       
-      console.log(`[INGEST] Data from ${apiKey}: ${otherMetrics.length} metrics, ${logs.length} logs`);
-
       res.status(202).json({ status: 'accepted' });
     } catch (error) {
       console.error('Ingestion error:', error);

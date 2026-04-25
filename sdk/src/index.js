@@ -13,8 +13,10 @@ class Sentinel {
 
   init(config) {
     this.projectKey = config.projectKey;
-    if (config.ingestServer) {
-        this.ingestServer = config.ingestServer.replace('localhost', '127.0.0.1');
+    this.serverUrl = config.serverUrl || config.ingestServer || 'http://127.0.0.1:5000';
+    
+    if (this.serverUrl.includes('localhost')) {
+      this.serverUrl = this.serverUrl.replace('localhost', '127.0.0.1');
     }
 
     this.originalLog('✅ Sentinel SDK Initialized');
@@ -97,7 +99,6 @@ class Sentinel {
     return (req, res, next) => {
       const start = process.hrtime();
       
-      // Auto-capture 500 errors as logs
       const originalEnd = res.end;
       res.end = (chunk, encoding, callback) => {
         if (res.statusCode >= 500) {
@@ -130,7 +131,6 @@ class Sentinel {
     let lastCpus = os.cpus();
 
     this.intervalId = setInterval(() => {
-      // Calculate CPU Usage Percentage (Cross-platform delta method)
       const currentCpus = os.cpus();
       let idleDifference = 0;
       let totalDifference = 0;
@@ -147,39 +147,44 @@ class Sentinel {
         totalDifference += total;
       }
 
-      const cpuUsage = totalDifference === 0 ? 0 : (1 - idleDifference / totalDifference) * 100;
+      const cpuPercent = totalDifference === 0 ? 0 : (1 - idleDifference / totalDifference) * 100;
       lastCpus = currentCpus;
 
       const totalMem = os.totalmem();
       const freeMem = os.freemem();
-      const ramUsage = ((totalMem - freeMem) / totalMem) * 100;
+      const ramPercent = ((totalMem - freeMem) / totalMem) * 100;
 
       this.queueMetric('system_metrics', { 
-        cpuUsage: parseFloat(cpuUsage.toFixed(2)), 
-        ramUsage 
+        cpuPercent: parseFloat(cpuPercent.toFixed(2)), 
+        ramPercent: parseFloat(ramPercent.toFixed(2))
       });
       this.flush();
-    }, 10000);
+    }, 5000); // High-frequency: 5 seconds
   }
 
   queueMetric(type, data) {
-    this.originalLog(`📦 [SENTINEL] Queued ${type}: ${JSON.stringify(data).substring(0, 50)}...`);
-    this.metricsQueue.push({ type, data, timestamp: Date.now() });
+    this.metricsQueue.push({ type, ...data, timestamp: Date.now() });
   }
 
   async flush() {
     if (this.metricsQueue.length === 0 || !this.projectKey) return;
+    
     const payload = {
-      apiKey: this.projectKey,
-      metrics: [...this.metricsQueue],
+      events: [...this.metricsQueue],
       timestamp: Date.now()
     };
+    
     this.metricsQueue = [];
     
     try {
-      await axios.post(`${this.ingestServer}/v1/ingest`, payload);
+      await axios.post(`${this.serverUrl}/v1/ingest`, payload, {
+        headers: {
+          'x-project-key': this.projectKey,
+          'Content-Type': 'application/json'
+        }
+      });
     } catch (error) {
-      // Silent error handler
+      // Fail silently
     }
   }
 }
