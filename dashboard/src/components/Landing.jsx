@@ -4,6 +4,8 @@ import sentinelLogo from '../assets/sentinellogo.png';
 
 const Landing = ({ user, onGetStarted, onNavigate, onLogin }) => {
   const [scrollProgress, setScrollProgress] = useState({});
+  const [joinEmail, setJoinEmail] = useState('');
+  const [joinStatus, setJoinStatus] = useState('idle'); // idle, loading, success, error
   const [statsScale, setStatsScale] = useState(1.6);
   const sectionRef = useRef(null);
   const statsSectionRef = useRef(null);
@@ -91,6 +93,26 @@ const Landing = ({ user, onGetStarted, onNavigate, onLogin }) => {
       animObserver.disconnect();
     };
   }, []);
+
+  const handleJoin = async (e) => {
+    e.preventDefault();
+    if (!joinEmail || joinStatus === 'loading') return;
+
+    setJoinStatus('loading');
+    try {
+      await fetch('/api/notifications/join', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: joinEmail })
+      });
+      setJoinStatus('success');
+      setJoinEmail('');
+      setTimeout(() => setJoinStatus('idle'), 5000);
+    } catch (err) {
+      setJoinStatus('error');
+      setTimeout(() => setJoinStatus('idle'), 3000);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-black text-text-main selection:bg-primary/30 overflow-x-hidden font-mono relative">
@@ -569,28 +591,47 @@ const Landing = ({ user, onGetStarted, onNavigate, onLogin }) => {
                   monitoring tips. No spam, unsubscribe anytime.
                 </p>
 
-                <form className="space-y-10" onSubmit={(e) => e.preventDefault()}>
+                <form className="space-y-10" onSubmit={handleJoin}>
                   <div className="space-y-4">
                     <label className="text-[12px] font-black uppercase tracking-widest text-white block">
                       Email address *
                     </label>
                     <input 
                       type="email" 
+                      required
+                      value={joinEmail}
+                      onChange={(e) => setJoinEmail(e.target.value)}
                       placeholder="Enter your email"
                       className="w-full bg-transparent border-b border-white py-4 text-[16px] outline-none placeholder:text-white/20 focus:border-[#FF583B] transition-colors"
                     />
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <input type="checkbox" className="mt-1 w-4 h-4 rounded border-white/20 bg-transparent" id="marketing" />
+                    <input type="checkbox" required className="mt-1 w-4 h-4 rounded border-white/20 bg-transparent" id="marketing" />
                     <label htmlFor="marketing" className="text-[13px] font-medium text-[#FFFFFF]/70">
                       Yes, I agree to receive marketing emails. *
                     </label>
                   </div>
 
-                  <button className="bg-[#FF583B] hover:bg-[#E64B2F] text-black w-full md:w-fit px-20 py-4 rounded-lg font-black text-[13px] uppercase tracking-[0.2em] transition-all">
-                    Join Now
+                  <button 
+                    disabled={joinStatus === 'loading'}
+                    className={`bg-[#FF583B] hover:bg-[#E64B2F] text-black w-full md:w-fit px-20 py-4 rounded-lg font-black text-[13px] uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 ${joinStatus === 'loading' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {joinStatus === 'loading' ? 'Processing...' : joinStatus === 'success' ? 'Joined!' : 'Join Now'}
                   </button>
+
+                  {joinStatus === 'success' && (
+                    <div className="p-5 bg-green-500/10 border border-green-500/30 rounded-[4px] text-green-500 text-[13px] font-bold tracking-[0.1em] animate-pulse flex items-center gap-3">
+                      <div className="w-2 h-2 bg-green-500 rounded-full" />
+                      INITIALIZED: WELCOME TO THE FOLD. YOU'RE OFFICIALLY ON THE UPDATE LIST.
+                    </div>
+                  )}
+                  {joinStatus === 'error' && (
+                    <div className="p-5 bg-red-500/10 border border-red-500/30 rounded-[4px] text-red-500 text-[13px] font-bold tracking-[0.1em] flex items-center gap-3">
+                      <div className="w-2 h-2 bg-red-500 rounded-full" />
+                      CONNECTION ERROR: THE GRID IS UNREACHABLE. PLEASE TRY AGAIN.
+                    </div>
+                  )}
                 </form>
               </div>
             </div>

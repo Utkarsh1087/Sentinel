@@ -34,7 +34,7 @@ router.get('/:projectId', authenticate, async (req, res) => {
 
 // Create an alert rule
 router.post('/', authenticate, async (req, res) => {
-  const { projectId, metricType, threshold, webhookUrl } = req.body;
+  const { projectId, metricType, threshold, webhookUrl, telegramChatId, emailRecipient } = req.body;
   
   try {
     // Verify project ownership
@@ -42,8 +42,8 @@ router.post('/', authenticate, async (req, res) => {
     if (project.rows.length === 0) return res.status(403).json({ error: 'Forbidden' });
 
     const result = await db.query(
-      'INSERT INTO alert_rules (project_id, metric_type, threshold, webhook_url) VALUES ($1, $2, $3, $4) RETURNING *',
-      [projectId, metricType, threshold, webhookUrl]
+      'INSERT INTO alert_rules (project_id, metric_type, threshold, webhook_url, telegram_chat_id, email_recipient) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [projectId, metricType, threshold, webhookUrl, telegramChatId, emailRecipient]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {

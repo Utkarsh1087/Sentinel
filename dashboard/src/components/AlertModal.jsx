@@ -7,6 +7,7 @@ const AlertModal = ({ projectId, onClose, onRuleCreated }) => {
   const [threshold, setThreshold] = useState('');
   const [webhookUrl, setWebhookUrl] = useState('');
   const [telegramChatId, setTelegramChatId] = useState('');
+  const [emailRecipient, setEmailRecipient] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -20,7 +21,8 @@ const AlertModal = ({ projectId, onClose, onRuleCreated }) => {
         metricType,
         threshold: parseFloat(threshold),
         webhookUrl,
-        telegramChatId
+        telegramChatId,
+        emailRecipient
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -104,6 +106,20 @@ const AlertModal = ({ projectId, onClose, onRuleCreated }) => {
                 onChange={(e) => setTelegramChatId(e.target.value)}
                 className="w-full bg-background border border-border rounded-lg py-2.5 pl-10 pr-4 text-sm text-white focus:border-primary focus:outline-none"
                 placeholder="e.g. 123456789"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Email Recipient (Optional)</label>
+            <div className="relative">
+              <Send className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+              <input 
+                type="email" 
+                value={emailRecipient}
+                onChange={(e) => setEmailRecipient(e.target.value)}
+                className="w-full bg-background border border-border rounded-lg py-2.5 pl-10 pr-4 text-sm text-white focus:border-primary focus:outline-none"
+                placeholder="e.g. dev@company.com"
               />
             </div>
           </div>

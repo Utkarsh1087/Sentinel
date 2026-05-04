@@ -13,7 +13,7 @@ router.post('/register', async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await db.query(
-      'INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email',
+      "INSERT INTO users (email, password_hash, plan) VALUES ($1, $2, 'free') RETURNING id, email, plan",
       [email, hashedPassword]
     );
     
@@ -44,7 +44,7 @@ router.post('/login', async (req, res) => {
     const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '7d' });
     
     res.json({ 
-      user: { id: user.id, email: user.email }, 
+      user: { id: user.id, email: user.email, plan: user.plan || 'free' }, 
       token 
     });
   } catch (err) {

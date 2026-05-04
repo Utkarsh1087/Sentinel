@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Check, Zap, Shield, Globe, Cpu, ArrowRight, MessageSquare, Slack, Mail } from 'lucide-react';
 import sentinelLogo from '../assets/sentinellogo.png';
+import ProInquiryModal from './ProInquiryModal';
 
-const Pricing = ({ onBack, onGetStarted }) => {
+const Pricing = ({ onBack, onGetStarted, user }) => {
+  const [showProModal, setShowProModal] = useState(false);
   const plans = [
     {
       name: 'Standard',
@@ -14,20 +16,20 @@ const Pricing = ({ onBack, onGetStarted }) => {
     },
     {
       name: 'Pro',
-      price: '$49',
+      price: '$12',
       description: 'For apps running in production where you need longer history and more projects.',
       features: ['Unlimited monitored projects', '30 days of metric history', 'Full error tracking with stack traces', 'Alert history for last 30 days', 'Custom alert thresholds per project'],
       buttonText: 'Get Started',
       accent: true
     },
     {
-      name: 'Self-Hosted',
-      price: 'Free',
-      description: 'Run Sentinel entirely on your own server. Your data never leaves your infrastructure.',
-      features: ['Full source code on GitHub', 'Deploy on any VPS or cloud server', 'No data sent to third parties', 'Docker setup included'],
-      buttonText: 'View on GitHub',
+      name: 'Enterprise',
+      price: 'Contact',
+      description: 'Advanced governance, SSO, and dedicated support for high-scale organizations.',
+      features: ['SAML/SSO Authentication', 'Dedicated Success Manager', 'Custom Data Retention', 'On-premise Deployment', 'SLA Guarantees'],
+      buttonText: 'Coming Soon',
       accent: false,
-      isExternal: true
+      isComingSoon: true
     }
   ];
 
@@ -77,7 +79,7 @@ const Pricing = ({ onBack, onGetStarted }) => {
                 <h3 className="text-[14px] font-black text-white/40 uppercase tracking-[0.3em] mb-4">{plan.name}</h3>
                 <div className="flex items-baseline gap-2">
                   <span className="text-[48px] font-black tracking-tighter">{plan.price}</span>
-                  {plan.price !== 'Free' && <span className="text-white/20 text-[14px]">/mo</span>}
+                  {plan.price !== 'Free' && plan.price !== 'Contact' && <span className="text-white/20 text-[14px]">/mo</span>}
                 </div>
                 <p className="text-[13px] text-white/40 mt-4 leading-relaxed">{plan.description}</p>
               </div>
@@ -92,15 +94,26 @@ const Pricing = ({ onBack, onGetStarted }) => {
               </div>
 
               <button 
-                onClick={() => plan.isExternal ? window.open('https://github.com', '_blank') : onGetStarted()}
+                disabled={plan.isComingSoon}
+                onClick={() => {
+                  if (plan.isExternal) {
+                    window.open('https://github.com', '_blank');
+                  } else if (plan.name === 'Pro') {
+                    setShowProModal(true);
+                  } else {
+                    onGetStarted();
+                  }
+                }}
                 className={`w-full py-4 rounded-xl text-[14px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
-                  plan.accent 
-                  ? 'bg-[#FF6044] text-black hover:bg-[#FF8B77] shadow-xl shadow-[#FF6044]/20' 
-                  : 'bg-white/5 text-white hover:bg-white/10 border border-white/10'
+                  plan.isComingSoon
+                  ? 'bg-white/5 text-white/20 cursor-not-allowed border border-white/5'
+                  : plan.accent 
+                    ? 'bg-[#FF6044] text-black hover:bg-[#FF8B77] shadow-xl shadow-[#FF6044]/20' 
+                    : 'bg-white/5 text-white hover:bg-white/10 border border-white/10'
                 }`}
               >
                 {plan.buttonText}
-                <ArrowRight className="w-4 h-4" />
+                {!plan.isComingSoon && <ArrowRight className="w-4 h-4" />}
               </button>
             </div>
           ))}
@@ -111,7 +124,7 @@ const Pricing = ({ onBack, onGetStarted }) => {
           <div className="max-w-xl">
             <h4 className="text-[20px] font-bold mb-4">Not sure which plan to pick?</h4>
             <p className="text-[14px] text-white/40 leading-relaxed">
-              Start with the free plan; it includes everything you need to monitor a side project or small app. Upgrade to Pro when you want longer history or more than 3 projects. Go self-hosted if you want full control over where your data lives.
+              Start with the free plan; it includes everything you need to monitor a side project or small app. Upgrade to Pro when you want longer history or more than 3 projects. Our Enterprise plan (coming soon) will offer custom governance and scale for larger organizations.
             </p>
           </div>
           <div className="flex gap-8 opacity-30">
@@ -138,9 +151,15 @@ const Pricing = ({ onBack, onGetStarted }) => {
       {/* 🏁 Footer */}
       <footer className="border-t border-white/5 py-12 px-10 text-center">
         <p className="text-[11px] text-white/20 uppercase tracking-[0.5em]">
-          FREE TO START. FREE TO SELF-HOST. SENTINEL © 2026
+          FREE TO START. ENGINEERED FOR SCALE. SENTINEL © 2026
         </p>
       </footer>
+
+      <ProInquiryModal 
+        isOpen={showProModal} 
+        onClose={() => setShowProModal(false)} 
+        userEmail={user?.email} 
+      />
     </div>
   );
 };

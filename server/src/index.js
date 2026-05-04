@@ -36,6 +36,7 @@ app.use('/api/projects', require('./routes/projects'));
 app.use('/api/metrics', require('./routes/metrics'));
 app.use('/api/alerts', require('./routes/alerts'));
 app.use('/api/ai', require('./routes/ai'));
+app.use('/api/notifications', require('./routes/notifications'));
 app.use('/v1/ingest', require('./routes/ingest')(io));
 
 const db = require('./config/db');

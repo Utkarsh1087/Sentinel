@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS alert_rules (
   duration_minutes INTEGER DEFAULT 5,
   webhook_url TEXT,
   telegram_chat_id VARCHAR(100),
+  email_recipient VARCHAR(255),
   is_active BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

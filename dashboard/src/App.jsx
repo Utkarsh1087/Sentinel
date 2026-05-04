@@ -221,7 +221,7 @@ const App = () => {
   if (loading) return <div className="h-screen bg-[#0A0A0B] flex items-center justify-center"><div className="w-8 h-8 border-4 border-[#FF6044] border-t-transparent rounded-full animate-spin" /></div>;
   if (!user || ['landing', 'documentation', 'pricing', 'integrations', 'login', 'register', 'privacy', 'how-it-works', 'features'].includes(route)) {
     if (route === 'integrations') return <Integrations onBack={() => navigateTo('landing')} onNavigate={navigateTo} />;
-    if (route === 'pricing') return <Pricing onBack={() => navigateTo('landing')} onGetStarted={() => navigateTo('register')} />;
+    if (route === 'pricing') return <Pricing user={user} onBack={() => navigateTo('landing')} onGetStarted={() => navigateTo('register')} />;
     if (route === 'documentation') return <Documentation onBack={() => navigateTo('landing')} section={docSection} />;
     if (route === 'privacy') return <PrivacyPolicy onBack={() => navigateTo('landing')} />;
     if (route === 'how-it-works') return <HowItWorks onBack={() => navigateTo('landing')} onNavigate={navigateTo} />;
@@ -278,8 +278,14 @@ const App = () => {
             <div className="px-4 flex items-center justify-between group">
               <span className="text-[11px] font-black text-white/20 uppercase tracking-[0.3em] group-hover:text-white/40 transition-colors">Active Projects</span>
               <button 
-                onClick={() => setShowModal(true)}
-                className="w-5 h-5 rounded-md bg-white/[0.02] border border-white/5 flex items-center justify-center text-white/20 hover:text-[#FF6044] hover:bg-[#FF6044]/10 transition-all shadow-lg"
+                onClick={() => {
+                  if (user?.plan !== 'pro' && projects.length >= 3) {
+                    alert("PROTOCOL LIMIT REACHED: Free accounts are limited to 3 projects. Upgrade to Pro for unlimited access.");
+                  } else {
+                    setShowModal(true);
+                  }
+                }}
+                className={`w-5 h-5 rounded-md bg-white/[0.02] border border-white/5 flex items-center justify-center text-white/20 hover:text-[#FF6044] hover:bg-[#FF6044]/10 transition-all shadow-lg ${user?.plan !== 'pro' && projects.length >= 3 ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <Plus className="w-3.5 h-3.5" />
               </button>
@@ -314,7 +320,14 @@ const App = () => {
                <p className="text-[12px] font-black text-white/80 truncate uppercase tracking-tighter">
                  {user?.email.split('@')[0]}
                </p>
-               <p className="text-[9px] font-black text-[#FF6044]/60 uppercase tracking-widest">Protocol Admin</p>
+               <div className="flex items-center gap-2">
+                 <p className="text-[9px] font-black text-[#FF6044]/60 uppercase tracking-widest">Protocol Admin</p>
+                 {user?.plan === 'pro' && (
+                   <span className="px-1.5 py-0.5 bg-amber-400 text-black text-[7px] font-black rounded uppercase tracking-widest animate-pulse">
+                     Pro
+                   </span>
+                 )}
+               </div>
             </div>
             <button 
               onClick={handleLogout}
@@ -361,13 +374,19 @@ const App = () => {
                 <Clock className="w-4 h-4 text-white/20 group-hover:text-[#FF6044] transition-colors" />
                 <select 
                   value={timeRange}
-                  onChange={(e) => setTimeRange(e.target.value)}
+                  onChange={(e) => {
+                    if (e.target.value === '-7d' && user?.plan !== 'pro') {
+                      alert("PRO PROTOCOL REQUIRED: 7-day history is reserved for Pro users.");
+                      return;
+                    }
+                    setTimeRange(e.target.value);
+                  }}
                   className="bg-transparent text-[10px] font-black uppercase tracking-[0.2em] text-white/40 focus:outline-none cursor-pointer group-hover:text-white transition-colors"
                 >
                   <option value="-1h" className="bg-black">60 Minutes</option>
                   <option value="-6h" className="bg-black">06 Hours</option>
                   <option value="-24h" className="bg-black">24 Hours</option>
-                  <option value="-7d" className="bg-black">07 Days</option>
+                  <option value="-7d" className={`bg-black ${user?.plan !== 'pro' ? 'text-white/20' : ''}`}>07 Days {user?.plan !== 'pro' ? '(PRO)' : ''}</option>
                 </select>
              </div>
 
@@ -654,8 +673,14 @@ const App = () => {
                 Sentinel is standing by. Create your first project and initialize the SDK to begin real-time architectural monitoring.
               </p>
               <button 
-                onClick={() => setShowModal(true)}
-                className="bg-white text-black hover:bg-[#FF6044] hover:text-white px-10 py-4 rounded-2xl font-black transition-all shadow-2xl uppercase tracking-widest text-[11px]"
+                onClick={() => {
+                  if (user?.plan !== 'pro' && projects.length >= 3) {
+                    alert("PROTOCOL LIMIT REACHED: Free accounts are limited to 3 projects. Upgrade to Pro for unlimited access.");
+                  } else {
+                    setShowModal(true);
+                  }
+                }}
+                className={`bg-white text-black hover:bg-[#FF6044] hover:text-white px-10 py-4 rounded-2xl font-black transition-all shadow-2xl uppercase tracking-widest text-[11px] ${user?.plan !== 'pro' && projects.length >= 3 ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 Provision Project 01
               </button>
@@ -741,12 +766,18 @@ const LogLine = ({ time, level, msg, color = 'text-white/60', hasAI = false, api
         <span className={`${color} flex-1 text-[12px] leading-relaxed font-semibold truncate group-hover:text-white transition-colors`}>{msg}</span>
         {hasAI && !analysis && (
           <button 
-            onClick={handleAIExplain}
+            onClick={() => {
+              if (user?.plan !== 'pro') {
+                alert("AI DIAGNOSTICS LOCKED: Error analysis is a Pro feature. Upgrade your protocol to unlock.");
+                return;
+              }
+              handleAIExplain();
+            }}
             disabled={analyzing}
-            className="hidden group-hover:flex items-center gap-2 text-[9px] bg-white text-black px-4 py-2 rounded-lg font-black hover:bg-[#FF6044] transition-all uppercase tracking-widest shadow-xl"
+            className={`hidden group-hover:flex items-center gap-2 text-[9px] px-4 py-2 rounded-lg font-black transition-all uppercase tracking-widest shadow-xl ${user?.plan === 'pro' ? 'bg-white text-black hover:bg-[#FF6044] hover:text-white' : 'bg-white/10 text-white/40 cursor-not-allowed'}`}
           >
             {analyzing ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Activity className="w-3.5 h-3.5" />}
-            {analyzing ? 'Processing' : 'Analyze'}
+            {analyzing ? 'Processing' : user?.plan === 'pro' ? 'Analyze' : 'Analyze (PRO)'}
           </button>
         )}
       </div>

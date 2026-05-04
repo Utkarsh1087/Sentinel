@@ -36,12 +36,29 @@ router.post('/', authenticate, async (req, res) => {
   const apiKey = `sn_${crypto.randomBytes(16).toString('hex')}`;
   
   try {
+    // Check plan and project count
+    const userResult = await db.query('SELECT plan FROM users WHERE id = $1', [req.userId]);
+    const userPlan = userResult.rows[0]?.plan || 'free';
+    
+    if (userPlan === 'free') {
+      const projectCountResult = await db.query('SELECT COUNT(*) FROM projects WHERE owner_id = $1', [req.userId]);
+      const projectCount = parseInt(projectCountResult.rows[0].count);
+      
+      if (projectCount >= 3) {
+        return res.status(403).json({ 
+          error: 'Project limit reached', 
+          message: 'Free accounts are limited to 3 projects. Upgrade to Pro for unlimited access.' 
+        });
+      }
+    }
+
     const result = await db.query(
       'INSERT INTO projects (owner_id, name, api_key) VALUES ($1, $2, $3) RETURNING *',
       [req.userId, name, apiKey]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
+    console.error('Project creation error:', err);
     res.status(500).json({ error: 'Database error' });
   }
 });

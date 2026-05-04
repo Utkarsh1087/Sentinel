@@ -2,6 +2,7 @@ const { Queue, Worker, QueueScheduler } = require('bullmq');
 const axios = require('axios');
 const db = require('../config/db');
 const { queryMetrics } = require('../config/influx');
+const { Resend } = require('resend');
 
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 const INFLUX_BUCKET = process.env.INFLUX_BUCKET;
@@ -88,6 +89,32 @@ const triggerAlert = async (rule, currentValue) => {
       });
     } catch (err) {
       console.error('Failed to send Telegram alert:', err.message);
+    }
+  }
+  
+  // 3. Email Integration (Resend)
+  if (rule.email_recipient && process.env.RESEND_API_KEY) {
+    try {
+      const resend = new Resend(process.env.RESEND_API_KEY);
+
+      await resend.emails.send({
+        from: 'Sentinel <onboarding@resend.dev>', // You can change this to your verified domain later
+        to: rule.email_recipient,
+        subject: `🚨 Alert: ${rule.project_name} - ${rule.metric_type.toUpperCase()}`,
+        html: `
+          <div style="font-family: sans-serif; padding: 20px; border: 1px solid #ff6044; border-radius: 10px; background-color: #050506; color: #efffeb;">
+            <h2 style="color: #ff6044; border-bottom: 1px solid #ff6044; padding-bottom: 10px;">Sentinel Alert</h2>
+            <p style="font-size: 16px;"><strong>Project:</strong> ${rule.project_name}</p>
+            <p style="font-size: 16px;"><strong>Metric:</strong> ${rule.metric_type.toUpperCase()}</p>
+            <p style="font-size: 18px; color: #ff6044;"><strong>Current Value:</strong> ${currentValue.toFixed(2)}</p>
+            <p style="font-size: 16px;"><strong>Threshold:</strong> ${rule.threshold}</p>
+            <hr style="border: 0; border-top: 1px solid #333; margin: 20px 0;" />
+            <p style="color: #666; font-size: 12px;">Timestamp: ${new Date().toISOString()}</p>
+          </div>
+        `
+      });
+    } catch (err) {
+      console.error('Failed to send Email alert via Resend:', err.message);
     }
   }
 };
